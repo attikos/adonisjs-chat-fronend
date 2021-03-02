@@ -1,9 +1,10 @@
 import _axios from 'axios'
 
+// const isDev = process.env.NODE_ENV === 'development'
 const axiosInstance = _axios.create()
-const URL_API = 'http://127.0.0.1:3333'
+const env = require(`../../env/${ process.env.NODE_ENV }.env`)
 
-axiosInstance.defaults.baseURL = URL_API
+axiosInstance.defaults.baseURL = env.API_URL
 axiosInstance.defaults.withCredentials = true
 
 export const axios = axiosInstance
