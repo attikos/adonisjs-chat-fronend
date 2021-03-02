@@ -49,8 +49,8 @@ import 'vue-quick-chat/dist/vue-quick-chat.css';
 import Auth from './components/Auth'
 import store from '@/store'
 import {axios} from '@/utils/axios'
+import {socket} from '@/utils/socket'
 import {mapState,mapGetters,mapMutations,mapActions} from 'vuex';
-import Ws from '@adonisjs/websocket-client'
 
 export default {
     name: 'app',
@@ -62,8 +62,6 @@ export default {
 
     data() {
         return {
-            ws          : undefined,
-            wsChat      : undefined,
             isConnected : false,
             visible     : true,
             // participants : [
@@ -202,7 +200,10 @@ export default {
         async isAuth(val) {
             if ( val ) {
                 await this.fetchMessages()
-                await this.initWs()
+                await socket.connect()
+                console.log('socket', socket);
+
+                await this.addSubscribeListener()
 
                 if ( this.messages.length ) {
                     const theirMessageIds = this.messages
@@ -220,7 +221,7 @@ export default {
     },
 
     beforeDestroy () {
-        this.closeWs()
+        socket.close();
     },
 
     methods: {
@@ -236,67 +237,21 @@ export default {
             'setParticipantList',
         ]),
 
-        closeWs() {
-            this.wsChat.close();
-            this.ws.close();
-        },
-
         sendMarkMessageAsViewed(messageIdList = []) {
-            this.wsChat.emit('viewed', messageIdList)
+            socket.subscription.emit('viewed', messageIdList)
         },
 
-        initWs() {
-            return new Promise( async (resolve, reject) => {
-                this.ws = this.ws || Ws('ws://127.0.0.1:3333').connect()
+        async addSubscribeListener () {
+            socket.subscription.on('message', (message) => {
+                this.addMessage(message)
 
-                this.ws.on('close', () => {
-                    this.isConnected = false
-                    console.log('close')
-                })
-
-                this.ws.on('open', async () => {
-                    this.isConnected = true
-                    console.log('connected')
-                    await this.subscribeToChannel()
-                    resolve()
-                })
-
-                this.ws.on('error', () => {
-                    reject()
-                    console.log('disconnected')
-                })
+                if (!message.viewed && message.participantId !== this.user.id) {
+                    this.sendMarkMessageAsViewed([message.id])
+                }
             })
-        },
 
-        async subscribeToChannel () {
-            return new Promise( async (resolve, reject) => {
-                this.wsChat = this.wsChat || await this.ws.subscribe('chat')
-
-                this.wsChat.on('ready', () => {
-                    resolve()
-                    console.log('ready')
-                })
-
-                this.wsChat.on('error', (e) => {
-                    reject()
-                    console.log('error', e)
-                })
-
-                this.wsChat.on('close', (e) => {
-                    console.log('close', e)
-                })
-
-                this.wsChat.on('message', (message) => {
-                    this.addMessage(message)
-
-                    if (!message.viewed && message.participantId !== this.user.id) {
-                        this.sendMarkMessageAsViewed([message.id])
-                    }
-                })
-
-                this.wsChat.on('viewed', (messageIdList) => {
-                    this.setAsViewed(messageIdList)
-                })
+            socket.subscription.on('viewed', (messageIdList) => {
+                this.setAsViewed(messageIdList)
             })
         },
 
@@ -318,7 +273,7 @@ export default {
         },
 
         async sendMessage(message) {
-            this.wsChat.emit('message', message)
+            socket.subscription.emit('message', message)
 
             // try {
             //     const res = await axios.post('/post', { message })
@@ -332,7 +287,7 @@ export default {
 
         onClose() {
             this.logout()
-            this.closeWs()
+            socket.close();
         },
 
         async logout() {

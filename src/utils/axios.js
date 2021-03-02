@@ -1,6 +1,5 @@
 import _axios from 'axios'
 
-// const isDev = process.env.NODE_ENV === 'development'
 const axiosInstance = _axios.create()
 const env = require(`../../env/${ process.env.NODE_ENV }.env`)
 
