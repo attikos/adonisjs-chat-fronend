@@ -18,6 +18,8 @@ export default () => {
             },
 
             addMessage(state, message) {
+                console.log('addMessage', message);
+
                 state.messagesRaw.push( message )
             },
 

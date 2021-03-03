@@ -2,32 +2,42 @@ import Ws from '@adonisjs/websocket-client'
 
 const env = require(`../../env/${ process.env.NODE_ENV }.env`)
 
-export const socket = {
+export const websocket = {
+    callbackList : {},
 
     /**
      * Connect and sunscribe to chat
+     * Events: close, open, error
      */
     connect() {
         return new Promise( async (resolve, reject) => {
-            this.socket = this.socket || await Ws(env.API_URL_WEBSOCKET).connect()
+            try {
+                this.socket = this.socket || await Ws(env.API_URL_WEBSOCKET).connect()
 
-            this.socket.on('close', () => {
-                this.isConnected = false
-                console.log('close')
-            })
+                this.socket.on('close', () => {
+                    console.log('close')
+                    this.runCallback('close');
+                })
 
-            this.socket.on('open', async () => {
-                this.isConnected = true
-                console.log('connected')
+                this.socket.on('open', async () => {
+                    console.log('connected')
+                    this.runCallback('open');
 
-                await this.subscribe()
-                resolve()
-            })
+                    await this.subscribe()
+                    resolve()
+                })
 
-            this.socket.on('error', () => {
-                reject()
-                console.log('disconnected')
-            })
+                this.socket.on('error', () => {
+                    this.runCallback('error');
+                    reject()
+                    console.log('disconnected')
+                })
+
+                window.socket = this
+            }
+            catch (err) {
+                console.log(err)
+            }
         })
     },
 
@@ -41,14 +51,22 @@ export const socket = {
 
     /**
      * Subscribe to the chat.
-     * You can subscribe to event:
-     * ready, error, close, message, viewed
+     * Events: ready, error, close, message, viewed
      *
      * @return {Promise}
      */
     async subscribe() {
         return new Promise( async (resolve, reject) => {
-            this.subscription = this.subscription || await this.socket.subscribe('chat')
+            if (!this.socket) {
+                throw new Error('Websocket not connected. Subscription not available.');
+            }
+
+            try {
+                this.subscription = this.subscription || await this.socket.subscribe('chat')
+            }
+            catch(err) {
+                console.log(err)
+            }
 
             this.subscription.on('ready', () => {
                 console.log('ready')
@@ -60,17 +78,56 @@ export const socket = {
                 reject()
             })
 
-            this.subscription.on('close', (e) => {
-                console.log('close', e)
-            })
+            // this.subscription.on('close', (e) => {
+            //     console.log('close', e)
+            // })
 
-            this.subscription.on('message', (message) => {
-                console.log('message', message);
-            })
+            // this.subscription.on('message', (message) => {
+            //     console.log('message', message);
+            // })
 
-            this.subscription.on('viewed', (messageIdList) => {
-                console.log('viewed', messageIdList);
-            })
+            // this.subscription.on('viewed', (messageIdList) => {
+            //     console.log('viewed', messageIdList);
+            // })
         })
     },
+
+    on(eventName, handler) {
+        if (!this.socket) {
+            return;
+        }
+
+        this.setCallback(eventName, handler)
+    },
+
+    off(eventName) {
+        if (!this.socket) {
+            return;
+        }
+
+        this.setCallback(eventName)
+    },
+
+    runCallback(eventName) {
+        console.log('run', eventName);
+
+        this.callbackList[ eventName ] && this.callbackList[ eventName ].call();
+    },
+
+    setCallback(eventName, handler) {
+        if (handler) {
+            this.callbackList[ eventName ] = handler;
+
+            if (eventName === 'open' && this.socket) {
+
+                /**
+                 * Event open already fired, let's fire the callback
+                 */
+                this.runCallback('open')
+            }
+        }
+        else {
+            delete this.callbackList[ eventName ];
+        }
+    }
 }

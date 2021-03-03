@@ -228,6 +228,8 @@ export default {
         border: none;
         border-bottom: 4px solid #fff;
         height: 40px;
+        font-size: 14px;
+        line-height: 20px;
         color: #003c77;
         outline: none;
         transition: 0.3s;

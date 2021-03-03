@@ -49,7 +49,7 @@ import 'vue-quick-chat/dist/vue-quick-chat.css';
 import Auth from './components/Auth'
 import store from '@/store'
 import {axios} from '@/utils/axios'
-import {socket} from '@/utils/socket'
+import {websocket} from '@/utils/socket'
 import {mapState,mapGetters,mapMutations,mapActions} from 'vuex';
 
 export default {
@@ -200,10 +200,8 @@ export default {
         async isAuth(val) {
             if ( val ) {
                 await this.fetchMessages()
-                await socket.connect()
-                console.log('socket', socket);
-
-                await this.addSubscribeListener()
+                await websocket.connect()
+                this.addSocketListeners()
 
                 if ( this.messages.length ) {
                     const theirMessageIds = this.messages
@@ -221,7 +219,7 @@ export default {
     },
 
     beforeDestroy () {
-        socket.close();
+        websocket.close();
     },
 
     methods: {
@@ -238,11 +236,22 @@ export default {
         ]),
 
         sendMarkMessageAsViewed(messageIdList = []) {
-            socket.subscription.emit('viewed', messageIdList)
+            websocket.subscription.emit('viewed', messageIdList)
         },
 
-        async addSubscribeListener () {
-            socket.subscription.on('message', (message) => {
+        addSocketListeners () {
+            websocket.on('close', () => {
+                this.isConnected = false
+                console.log('close');
+
+            })
+
+            websocket.on('open', () => {
+                this.isConnected = true
+                console.log('open');
+            })
+
+            websocket.subscription.on('message', (message) => {
                 this.addMessage(message)
 
                 if (!message.viewed && message.participantId !== this.user.id) {
@@ -250,7 +259,7 @@ export default {
                 }
             })
 
-            socket.subscription.on('viewed', (messageIdList) => {
+            websocket.subscription.on('viewed', (messageIdList) => {
                 this.setAsViewed(messageIdList)
             })
         },
@@ -273,7 +282,7 @@ export default {
         },
 
         async sendMessage(message) {
-            socket.subscription.emit('message', message)
+            websocket.subscription.emit('message', message)
 
             // try {
             //     const res = await axios.post('/post', { message })
@@ -287,7 +296,7 @@ export default {
 
         onClose() {
             this.logout()
-            socket.close();
+            websocket.close();
         },
 
         async logout() {
