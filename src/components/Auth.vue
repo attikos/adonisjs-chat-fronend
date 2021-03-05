@@ -145,8 +145,7 @@ export default {
 
             let { success, user, errorMessage } = res.data || {};
 
-            if ( success && user.token ) {
-                setToken(user.token)
+            if ( success ) {
                 return this.setUser(user)
             }
         },
