@@ -48,7 +48,7 @@ import { Chat } from 'vue-quick-chat'
 import 'vue-quick-chat/dist/vue-quick-chat.css';
 import Auth from './components/Auth'
 import store from '@/store'
-import {axios} from '@/utils/axios'
+import {axios, clearToken} from '@/utils/axios'
 import {websocket} from '@/utils/socket'
 import {mapState,mapGetters,mapMutations,mapActions} from 'vuex';
 
@@ -308,9 +308,14 @@ export default {
                 return console.log(error)
             }
 
-            if ( res.data && res.data.success ) {
-                return this.setUser({})
-            }
+            clearToken()
+            this.setUser({})
+
+            return;
+
+            // if ( res.data && res.data.success ) {
+            //     return this.setUser({})
+            // }
         },
 
         onImageSelected({file, message}){
