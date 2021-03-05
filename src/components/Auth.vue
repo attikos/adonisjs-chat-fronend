@@ -98,7 +98,7 @@
 
 <script>
 import {mapGetters, mapMutations} from 'vuex'
-import {axios} from '@/utils/axios'
+import {axios, setToken, clearToken} from '@/utils/axios'
 
 export default {
     name : 'auth',
@@ -143,8 +143,11 @@ export default {
                 return console.log(error)
             }
 
-            if ( res.data && res.data.success ) {
-                return this.setUser(res.data.user)
+            let { success, user, errorMessage } = res.data || {};
+
+            if ( success && user.token ) {
+                setToken(user.token)
+                return this.setUser(user)
             }
         },
 
@@ -157,12 +160,15 @@ export default {
                     password : this.password
                 })
 
-                if ( res.data && res.data.success ) {
-                    this.setUser(res.data.user)
+                let { success, user, errorMessage } = res.data || {};
+
+                if ( success && user.token ) {
+                    setToken(user.token)
+                    this.setUser(user)
                 }
                 else {
-                    if ( res.data && res.data.errorMessage ) {
-                        this.error = res.data.errorMessage
+                    if ( errorMessage ) {
+                        this.error = errorMessage
                     }
                 }
             } catch (error) {

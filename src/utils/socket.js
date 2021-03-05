@@ -1,4 +1,5 @@
 import Ws from '@adonisjs/websocket-client'
+import {getToken} from '@/utils/axios'
 
 const env = require(`../../env/${ process.env.NODE_ENV }.env`)
 
@@ -12,7 +13,10 @@ export const websocket = {
     connect() {
         return new Promise( async (resolve, reject) => {
             try {
-                this.socket = this.socket || await Ws(env.API_URL_WEBSOCKET).connect()
+                const token = getToken()
+                this.socket = this.socket || await Ws(env.API_URL_WEBSOCKET)
+                    .withApiToken( token )
+                    .connect()
 
                 this.socket.on('close', () => {
                     console.log('close')
