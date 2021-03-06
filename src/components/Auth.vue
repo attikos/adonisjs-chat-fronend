@@ -184,12 +184,15 @@ export default {
                     password : this.password
                 })
 
-                if ( res.data && res.data.success ) {
-                    this.setUser(res.data.user)
+                let { success, user, errorMessage } = res.data || {};
+
+                if ( success && user.token ) {
+                    setToken(user.token)
+                    this.setUser(user)
                 }
                 else {
-                    if ( res.data && res.data.errorMessage ) {
-                        this.error = res.data.errorMessage
+                    if ( errorMessage ) {
+                        this.error = errorMessage
                     }
                 }
             } catch (error) {

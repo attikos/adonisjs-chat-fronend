@@ -296,7 +296,6 @@ export default {
 
         onClose() {
             this.logout()
-            websocket.close();
         },
 
         async logout() {
@@ -308,14 +307,9 @@ export default {
                 return console.log(error)
             }
 
+            websocket.close();
             clearToken()
             this.setUser({})
-
-            return;
-
-            // if ( res.data && res.data.success ) {
-            //     return this.setUser({})
-            // }
         },
 
         onImageSelected({file, message}){
