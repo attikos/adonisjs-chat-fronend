@@ -25,6 +25,7 @@
                     :scroll-bottom="scrollBottom"
                     :display-header="true"
                     :send-images="false"
+                    :profile-picture-config="profilePictureConfig"
                     :timestamp-config="timestampConfig"
                     :link-options="linkOptions"
                     :hide-close-button="false"
