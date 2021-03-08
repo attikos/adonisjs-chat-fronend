@@ -1,9 +1,14 @@
 <template>
     <div class="app">
-        <div class="app__status">
-            <p v-if="isConnected">Online <span class="app__status-mark app__status-mark--online">●</span></p>
-            <p v-else>Offline <span class="app__status-mark app__status-mark--offline">●</span></p>
-        </div>
+        <template>
+            <p v-if="isConnected" class="app__status">
+                Online <span class="app__status-mark app__status-mark--online">●</span>
+            </p>
+
+            <p v-else class="app__status">
+                Offline <span class="app__status-mark app__status-mark--offline">●</span>
+            </p>
+        </template>
 
         <div class="content">
             <div v-if="!isAuth" class="chat-container">
@@ -254,6 +259,13 @@ export default {
 </script>
 
 <style lang="scss">
+@import '@/scss/_breakepoints.scss';
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -262,8 +274,12 @@ export default {
     color: #2c3e50;
     margin-top: 60px;
 
-    &__status {
+    @include sm() {
+        margin-top: 0;
+    }
 
+    &__status {
+        margin: 0;
     }
 
     &__status-mark {
@@ -294,6 +310,10 @@ export default {
     height: calc(100vh - 130px);
     width: 350px;
     max-width: 100%;
+
+    @include sm() {
+        height: calc(100vh - 44px);
+    };
 }
 
 .external-controller {
