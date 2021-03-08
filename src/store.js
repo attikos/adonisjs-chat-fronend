@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {axios} from '@/utils/axios'
+import {axios, clearToken} from '@/api/axios'
+import {websocket} from '@/api/socket'
 
 Vue.use(Vuex)
 
@@ -84,7 +85,7 @@ export default () => {
         },
 
         actions : {
-            async fetchMessages( {state, commit} ) {
+            async fetchMessages({ commit }) {
                 let res
 
                 try {
@@ -93,10 +94,24 @@ export default () => {
                     return console.log(error)
                 }
 
-                if ( res.data && res.data.messages ) {
-                    commit('setMessageList', res.data.messages)
-                    commit('setParticipantList', res.data.participants)
+                let {messages, participants} = res?.data || {}
+
+                if (messages && participants) {
+                    commit('setMessageList', messages)
+                    commit('setParticipantList', participants)
                 }
+            },
+
+            async logout({ commit }) {
+                try {
+                    await axios.post('/logout')
+                } catch (error) {
+                    return console.log(error)
+                }
+
+                websocket.close()
+                clearToken()
+                commit('setUser', {})
             },
         }
     })

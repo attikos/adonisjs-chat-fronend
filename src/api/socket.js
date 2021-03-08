@@ -1,5 +1,5 @@
 import Ws from '@adonisjs/websocket-client'
-import {getToken} from '@/utils/axios'
+import {getToken} from '@/api/axios'
 
 const env = require(`../../env/${ process.env.NODE_ENV }.env`)
 

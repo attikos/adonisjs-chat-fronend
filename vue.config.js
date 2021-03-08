@@ -2,7 +2,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
     publicPath: '',
-    css: { extract: true },
+    css: {extract: true},
     configureWebpack: {
         devServer : {
             disableHostCheck: true,

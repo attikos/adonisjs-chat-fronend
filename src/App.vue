@@ -44,13 +44,12 @@
 </template>
 
 <script>
-import { Chat } from 'vue-quick-chat'
+import {Chat} from 'vue-quick-chat'
 import 'vue-quick-chat/dist/vue-quick-chat.css';
 import Auth from './components/Auth'
 import store from '@/store'
-import {axios, clearToken} from '@/utils/axios'
-import {websocket} from '@/utils/socket'
-import {mapState,mapGetters,mapMutations,mapActions} from 'vuex';
+import {websocket} from '@/api/socket'
+import {mapState, mapGetters, mapMutations, mapActions} from 'vuex';
 
 export default {
     name: 'app',
@@ -89,7 +88,6 @@ export default {
                     },
                     messagesDisplay: {
                         bg: '#f7f3f3'
-                        // bg: '#FFeFe3'
                     }
                 },
                 submitIcon: '#086CA2',
@@ -225,6 +223,7 @@ export default {
     methods: {
         ...mapActions([
             'fetchMessages',
+            'logout',
         ]),
 
         ...mapMutations([
@@ -285,7 +284,7 @@ export default {
             websocket.subscription.emit('message', message)
 
             // try {
-            //     const res = await axios.post('/post', { message })
+            //     const res = await axios.post('/post', {message})
 
             //     // if ( res.data && res.data.success ) {
             //     // }
@@ -296,20 +295,6 @@ export default {
 
         onClose() {
             this.logout()
-        },
-
-        async logout() {
-            let res
-
-            try {
-                res = await axios.post('/logout')
-            } catch (error) {
-                return console.log(error)
-            }
-
-            websocket.close();
-            clearToken()
-            this.setUser({})
         },
 
         onImageSelected({file, message}){
@@ -374,8 +359,9 @@ export default {
     justify-content: center;
     background: #f7f3f3;
     padding: 10px 0 10px 0;
-    height: 500px;
+    height: calc(100vh - 130px);
     width: 350px;
+    max-width: 100%;
 }
 
 .external-controller {
