@@ -11,7 +11,6 @@
             </div>
 
             <div v-if="isAuth" class="chat-container">
-                <!-- :load-more-messages="toLoad.length > 0 ? loadMoreMessages : null" -->
                 <Chat
                     :participants="participants"
                     :myself="user"
@@ -22,18 +21,13 @@
                     :border-style="borderStyle"
                     :close-button-icon-size="closeButtonIconSize"
                     :submit-icon-size="submitIconSize"
-                    :submit-image-icon-size="submitImageIconSize"
                     :async-mode="asyncMode"
                     :scroll-bottom="scrollBottom"
                     :display-header="true"
                     :send-images="false"
-                    :profile-picture-config="profilePictureConfig"
                     :timestamp-config="timestampConfig"
                     :link-options="linkOptions"
-                    :accept-image-types="'.png, .jpeg'"
                     :hide-close-button="false"
-                    @onImageClicked="onImageClicked"
-                    @onImageSelected="onImageSelected"
                     @onMessageSubmit="onMessageSubmit"
                     @onType="onType"
                     @onClose="onClose()"
@@ -62,15 +56,6 @@ export default {
     data() {
         return {
             isConnected : false,
-            visible     : true,
-            // participants : [
-            //     {
-            //         name: 'Arnaldo',
-            //         id: 1,
-            //         profilePicture: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a1/NafSadh_Profile.jpg/768px-NafSadh_Profile.jpg'
-            //     },
-            // ]
-
             placeholder: 'send your message',
             colors: {
                 header: {
@@ -100,25 +85,8 @@ export default {
                 bottomRight: "10px",
             },
             submitIconSize: 24,
-            submitImageIconSize: 24,
             closeButtonIconSize: "20px",
             asyncMode: true,
-            toLoad: [
-                {
-                    content: 'Hey, John Doe! How are you today?',
-                    participantId: 2,
-                    timestamp: { year: 2016, month: 3, day: 5, hour: 10, minute: 10, second: 3, millisecond: 123 },
-                    uploaded: true,
-                    viewed: true
-                },
-                {
-                    content: "Hey, Adam! I'm feeling really fine this evening.",
-                    participantId: 3,
-                    timestamp: { year: 2016, month: 1, day: 5, hour: 19, minute: 10, second: 3, millisecond:123 },
-                    uploaded: true,
-                    viewed: true
-                },
-            ],
             scrollBottom: {
                 messageSent: true,
                 messageReceived: false
@@ -268,55 +236,18 @@ export default {
             // eslint-disable-next-line
             // console.log('typing');
         },
-        loadMoreMessages(resolve) {
-            setTimeout(() => {
-                resolve(this.toLoad)
-                //Make sure the loaded messages are also added to our local messages copy or they will be lost
-                this.messages.unshift(...this.toLoad)
-                this.toLoad = []
-            }, 1000)
-        },
+
         onMessageSubmit(message) {
             this.sendMessage(message)
         },
 
         async sendMessage(message) {
             websocket.subscription.emit('message', message)
-
-            // try {
-            //     const res = await axios.post('/post', {message})
-
-            //     // if ( res.data && res.data.success ) {
-            //     // }
-            // } catch (error) {
-            //     return console.log(error)
-            // }
         },
 
         onClose() {
             this.logout()
         },
-
-        onImageSelected({file, message}){
-            let src = 'https://pbs.twimg.com/profile_images/875996174305472512/upM71pVR.jpg'
-            // this.addMessage(message)
-            /**
-             * This timeout simulates a requisition that uploads the image file to the server.
-             * It's up to you implement the request and deal with the response in order to
-             * update the message status and the message URL
-             */
-            setTimeout((res) => {
-                message.uploaded = true
-                message.src = res.src
-            }, 3000, {src})
-        },
-        onImageClicked(message){
-            /**
-             * This is the callback function that is going to be executed when some image is clicked.
-             * You can add your code here to do whatever you need with the image clicked. A common situation is to display the image clicked in full screen.
-             */
-            console.log('Image clicked', message.src)
-        }
     },
 }
 </script>
