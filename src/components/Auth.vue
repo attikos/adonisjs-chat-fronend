@@ -27,7 +27,7 @@
         <div v-if="activeTab === 'login'">
             <h2>Login</h2>
 
-            <form class="auth__form" @submit.prevent="submitLogin">
+            <form class="auth__form" @submit.prevent="onLogin">
                 <input
                     v-model="email"
                     type="email"
@@ -46,7 +46,7 @@
                 >
                 <span class="input-animation"></span>
 
-                <p v-if="error" class="auth__error">{{error}}</p>
+                <p v-if="error" class="auth__error">{{ error }}</p>
 
                 <button type="submit" class="auth__btn-submit btn-submit">Submit</button>
             </form>
@@ -55,7 +55,7 @@
         <div v-if="activeTab === 'register'">
             <h2>Register</h2>
 
-            <form class="auth__form" @submit.prevent="submitRegister">
+            <form class="auth__form" @submit.prevent="onRegister">
                 <input
                     v-model="email"
                     type="email"
@@ -83,7 +83,7 @@
                 >
                 <span class="input-animation"></span>
 
-                <p v-if="error" class="auth__error">{{error}}</p>
+                <p v-if="error" class="auth__error">{{ error }}</p>
 
                 <button type="submit" class="auth__btn-submit btn-submit">Submit</button>
             </form>
@@ -97,8 +97,7 @@
 </template>
 
 <script>
-import {mapGetters, mapMutations} from 'vuex'
-import {axios, setToken, clearToken} from '@/api/axios'
+import {mapState, mapGetters, mapMutations, mapActions} from 'vuex'
 
 export default {
     name : 'auth',
@@ -109,11 +108,14 @@ export default {
             password        : '',
             passwordConfirm : '',
             activeTab       : 'login',
-            error           : '',
         }
     },
 
     computed: {
+        ...mapState([
+            'error',
+        ]),
+
         ...mapGetters([
             'isAuth',
         ]),
@@ -121,7 +123,7 @@ export default {
 
     watch : {
         activeTab() {
-            this.error = ''
+            this.setError('')
         },
     },
 
@@ -132,72 +134,28 @@ export default {
     methods : {
         ...mapMutations([
             'setUser',
+            'setError',
         ]),
 
-        async checkAuth() {
-            let res
+        ...mapActions([
+            'checkAuth',
+            'submitLogin',
+            'submitRegister',
+        ]),
 
-            try {
-                res = await axios.post('/check');
-            } catch (error) {
-                return console.log(error)
-            }
-
-            let {success, user, errorMessage} = res?.data || {};
-
-            if ( success ) {
-                return this.setUser(user)
-            }
+        onLogin() {
+            this.submitLogin({
+                email: this.email,
+                password: this.password,
+            })
         },
 
-        async submitLogin() {
-            this.error = ''
-
-            try {
-                const res = await axios.post('/login', {
-                    email    : this.email,
-                    password : this.password
-                })
-
-                let {success, user, errorMessage} = res?.data || {};
-
-                if ( success && user.token ) {
-                    setToken(user.token)
-                    this.setUser(user)
-                }
-                else {
-                    if ( errorMessage ) {
-                        this.error = errorMessage
-                    }
-                }
-            } catch (error) {
-                return console.log(error)
-            }
-        },
-
-        async submitRegister() {
-            this.error = ''
-
-            try {
-                const res = await axios.post('/register', {
-                    email    : this.email,
-                    password : this.password
-                })
-
-                let {success, user, errorMessage} = res?.data || {};
-
-                if ( success && user.token ) {
-                    setToken(user.token)
-                    this.setUser(user)
-                }
-                else {
-                    if ( errorMessage ) {
-                        this.error = errorMessage
-                    }
-                }
-            } catch (error) {
-                return console.log(error)
-            }
+        async onRegister() {
+            this.submitRegister({
+                email           : this.email,
+                password        : this.password,
+                passwordConfirm : this.passwordConfirm,
+            })
         },
     },
 }

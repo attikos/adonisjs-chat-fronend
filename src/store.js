@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {axios, clearToken} from '@/api/axios'
+import {axios, setToken, clearToken} from '@/api/axios'
 import {websocket} from '@/api/socket'
 
 Vue.use(Vuex)
@@ -11,9 +11,14 @@ export default () => {
             user            : false,
             messagesRaw     : [],
             participantsRaw : [],
+            error           : '',
         },
 
         mutations: {
+            setError(state, error = '') {
+                state.error = error
+            },
+
             setUser(state, user) {
                 state.user = user
             },
@@ -50,7 +55,7 @@ export default () => {
 
             setParticipant(state, user) {
                 const newList = [ ...state.participantsRaw ]
-                newList.push( user )
+                newList.push(user)
                 state.participantsRaw = Array.from( new Set( newList ) )
             },
 
@@ -61,23 +66,20 @@ export default () => {
 
         getters: {
             isAuth(state) {
-                return Boolean( state.user && state.user.id )
+                return Boolean(state?.user.id)
             },
 
             participants(state) {
-                const userName = state.user && state.user.name
+                const userName = state?.user.name
 
                 return state.participantsRaw.filter(x => x.name !== userName)
             },
 
             messages(state) {
                 return [ ...state.messagesRaw ].map( x => {
-                    // x.uploaded      = true
-                    // x.viewed        = true
                     x.timestamp     = x.created_at
                     x.participantId = x.user_id || x.participantId
                     delete x.user_id
-                    // delete x.id
 
                     return x
                 })
@@ -85,7 +87,7 @@ export default () => {
         },
 
         actions : {
-            async fetchMessages({ commit }) {
+            async fetchMessages({commit}) {
                 let res
 
                 try {
@@ -102,7 +104,7 @@ export default () => {
                 }
             },
 
-            async logout({ commit }) {
+            async logout({commit}) {
                 try {
                     await axios.post('/logout')
                 } catch (error) {
@@ -113,6 +115,62 @@ export default () => {
                 clearToken()
                 commit('setUser', {})
             },
+
+            async checkAuth({commit}) {
+                let res
+
+                try {
+                    res = await axios.post('/check');
+                } catch (error) {
+                    return console.log(error)
+                }
+
+                let {success, user} = res?.data || {};
+
+                if ( success ) {
+                    commit('setUser', user)
+                }
+            },
+
+            async submitLogin({commit}, {email, password}) {
+                commit('setError', '')
+
+                try {
+                    const res = await axios.post('/login', {email, password})
+
+                    let {success, user, errorMessage} = res?.data || {};
+
+                    if ( success && user.token ) {
+                        setToken(user.token)
+                        commit('setUser', user)
+                    }
+                    else {
+                        errorMessage && commit('setError', errorMessage)
+                    }
+                } catch (error) {
+                    return console.log(error)
+                }
+            },
+
+            async submitRegister({commit}, {email, password, passwordConfirm}) {
+                commit('setError', '')
+
+                try {
+                    const res = await axios.post('/register', {email, password, passwordConfirm})
+
+                    let {success, user, errorMessage} = res?.data || {};
+
+                    if ( success && user.token ) {
+                        setToken(user.token)
+                        commit('setUser', user)
+                    }
+                    else {
+                        errorMessage && commit('setError', errorMessage)
+                    }
+                } catch (error) {
+                    return console.log(error)
+                }
+            }
         }
     })
 }
