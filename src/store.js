@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {axios, setToken, clearToken} from '@/api/axios'
-import {websocket} from '@/api/socket'
+import api from '@/api'
+import isWebpackDev from '@/utils/is-webpack-dev'
 
 Vue.use(Vuex)
 
 export default () => {
     return new Vuex.Store({
+        strict : isWebpackDev,
+
         state: {
             user            : false,
             messagesRaw     : [],
@@ -24,16 +26,12 @@ export default () => {
             },
 
             addMessage(state, message) {
-                console.log('addMessage', message);
-
                 state.messagesRaw.push( message )
             },
 
             setAsViewed(state, messageIdList = []) {
-                console.log('messageIdList', messageIdList)
-
                 if ( !Array.isArray(messageIdList) ) {
-                    console.log('messageIdList is not ARRAY!!!', messageIdList)
+                    console.error('messageIdList is not ARRAY!!!', messageIdList)
                     return
                 }
 
@@ -88,15 +86,7 @@ export default () => {
 
         actions : {
             async fetchMessages({commit}) {
-                let res
-
-                try {
-                    res = await axios.post('/list')
-                } catch (error) {
-                    return console.log(error)
-                }
-
-                let {messages, participants} = res?.data || {}
+                const {messages, participants} = await api.getList()
 
                 if (messages && participants) {
                     commit('setMessageList', messages)
@@ -105,70 +95,42 @@ export default () => {
             },
 
             async logout({commit}) {
-                try {
-                    await axios.post('/logout')
-                } catch (error) {
-                    return console.log(error)
-                }
+                await api.logout()
 
-                websocket.close()
-                clearToken()
                 commit('setUser', {})
             },
 
             async checkAuth({commit}) {
-                let res
-
-                try {
-                    res = await axios.post('/check');
-                } catch (error) {
-                    return console.log(error)
-                }
-
-                let {success, user} = res?.data || {};
+                const {success, user} = await api.checkAuth()
 
                 if ( success ) {
                     commit('setUser', user)
                 }
             },
 
-            async submitLogin({commit}, {email, password}) {
+            async login({commit}, {email, password}) {
                 commit('setError', '')
 
-                try {
-                    const res = await axios.post('/login', {email, password})
+                const {success, user, errorMessage} = await api.login({email, password})
 
-                    let {success, user, errorMessage} = res?.data || {};
-
-                    if ( success && user.token ) {
-                        setToken(user.token)
-                        commit('setUser', user)
-                    }
-                    else {
-                        errorMessage && commit('setError', errorMessage)
-                    }
-                } catch (error) {
-                    return console.log(error)
+                if ( success && user.token ) {
+                    commit('setUser', user)
+                }
+                else {
+                    errorMessage && commit('setError', errorMessage)
                 }
             },
 
-            async submitRegister({commit}, {email, password, passwordConfirm}) {
+            async register({commit}, {email, password, passwordConfirm}) {
                 commit('setError', '')
 
-                try {
-                    const res = await axios.post('/register', {email, password, passwordConfirm})
+                const {success, user, errorMessage} = await api.register({email, password, passwordConfirm})
 
-                    let {success, user, errorMessage} = res?.data || {};
-
-                    if ( success && user.token ) {
-                        setToken(user.token)
-                        commit('setUser', user)
-                    }
-                    else {
-                        errorMessage && commit('setError', errorMessage)
-                    }
-                } catch (error) {
-                    return console.log(error)
+                if ( success && user.token ) {
+                    commit('setUser', user)
+                }
+                else {
+                    errorMessage && commit('setError', errorMessage)
                 }
             }
         }

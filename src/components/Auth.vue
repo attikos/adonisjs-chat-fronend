@@ -46,7 +46,7 @@
                 >
                 <span class="input-animation"></span>
 
-                <p v-if="error" class="auth__error">{{ error }}</p>
+                <p v-if="error" class="auth__error">{{error}}</p>
 
                 <button type="submit" class="auth__btn-submit btn-submit">Submit</button>
             </form>
@@ -83,7 +83,7 @@
                 >
                 <span class="input-animation"></span>
 
-                <p v-if="error" class="auth__error">{{ error }}</p>
+                <p v-if="error" class="auth__error">{{error}}</p>
 
                 <button type="submit" class="auth__btn-submit btn-submit">Submit</button>
             </form>
@@ -104,8 +104,8 @@ export default {
 
     data() {
         return {
-            email           : '',
-            password        : '',
+            email           : 'test@domain.tld',
+            password        : '1234',
             passwordConfirm : '',
             activeTab       : 'login',
         }
@@ -139,19 +139,19 @@ export default {
 
         ...mapActions([
             'checkAuth',
-            'submitLogin',
-            'submitRegister',
+            'login',
+            'register',
         ]),
 
         onLogin() {
-            this.submitLogin({
+            this.login({
                 email: this.email,
                 password: this.password,
             })
         },
 
         async onRegister() {
-            this.submitRegister({
+            this.register({
                 email           : this.email,
                 password        : this.password,
                 passwordConfirm : this.passwordConfirm,

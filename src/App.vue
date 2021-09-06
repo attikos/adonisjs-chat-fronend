@@ -177,8 +177,8 @@ export default {
 
                 if ( this.messages.length ) {
                     const theirMessageIds = this.messages
-                    .filter(x => x.participantId !== this.user.id && !x.viewed)
-                    .map(x => x.id)
+                        .filter(x => x.participantId !== this.user.id && !x.viewed)
+                        .map(x => x.id)
 
                     this.sendMarkMessageAsViewed(theirMessageIds)
                 }
@@ -216,7 +216,6 @@ export default {
             websocket.on('close', () => {
                 this.isConnected = false
                 console.log('close');
-
             })
 
             websocket.on('open', () => {
