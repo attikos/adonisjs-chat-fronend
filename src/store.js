@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import api from '@/api'
-import isWebpackDev from '@/utils/is-webpack-dev'
+import { isWebpackDev } from '@/utils/is-webpack-dev'
 
 Vue.use(Vuex)
 
